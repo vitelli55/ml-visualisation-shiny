@@ -1,8 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import random
-
 from models import gradient_descent
 
 from shiny import App, Inputs, Outputs, Session, render, ui, reactive
@@ -10,13 +8,12 @@ from shiny import App, Inputs, Outputs, Session, render, ui, reactive
 #random data generator
 data = reactive.Value(pd.DataFrame({"x_values": [], "y_values": []}))
 def random_data() -> None:
-    rand_m = random.uniform(-5,5)
-    #rand_b = random.randint(0, 6)
-    x_data = [random.randint(50, 200) for _ in range(100)]
+    rand_m = np.random.uniform(-5,5)
+    x_data = [np.random.randint(50, 200) for _ in range(100)]
 
     data.set(pd.DataFrame({
         "x_values": x_data,
-        "y_values": [int(rand_m * xi + random.gauss(2,15)) for xi in x_data] 
+        "y_values": [int(rand_m * xi + np.random.normal(2,15)) for xi in x_data] 
     }))
 random_data()
 
@@ -28,16 +25,19 @@ app_ui = ui.page_navbar(
             ui.sidebar(
                 ui.output_data_frame("data_display"),
                 ui.input_action_button("randomise_button", "Randomise Data"),
-                ui.input_action_button("regression_button", "Draw regression line"),
+                #ui.input_action_button("regression_button", "Draw regression line"),
                 ui.input_file("csvfile", "Upload your own CSV dataset", accept=[".csv"], multiple=False)
             ),
             
             ui.card(
                 ui.card_header("Scatterplot"),
-                ui.output_plot("scatter_plot"),    
+                ui.output_plot("scatter_plot"),  
+                ui.input_slider("regression_slider", "Draw Regression Line", min=0, max=5, value=0, animate=True),  
+                
             ),
             ui.card(
-                ui.card_header("Final equation:"),
+                ui.card_header("Equation of the line of best fit:"),
+                ui.output_code("curr_equation_lr", placeholder=True),
                 ui.output_code("final_equation_lr", placeholder=True),
             ),
             
@@ -59,9 +59,12 @@ def server(input, output, session):
     show_regression = reactive.Value(False)
 
     @reactive.effect
-    @reactive.event(input.regression_button)
+    @reactive.event(input.regression_slider)
     def _() -> None:
         show_regression.set(True)
+
+    curr_m = reactive.Value(0)    
+    curr_b = reactive.Value(0)   
 
     final_m = reactive.Value(0)    
     final_b = reactive.Value(0)    
@@ -99,7 +102,6 @@ def server(input, output, session):
         df['raw_x_values'] = df['x_values']
         fig, ax = plt.subplots()
         ax.scatter(df.x_values, df.y_values, color="black")
-        #ax.set_title("Scatterplot")
         ax.set_xlabel("X Values")
         ax.set_ylabel("Y Values")
         
@@ -109,12 +111,16 @@ def server(input, output, session):
             mu = df.x_values.mean()
             sigma = df.x_values.std()
 
-            for m, b in zip(m_values, b_values):
-                m_raw = m / sigma
-                b_raw = b - (m * mu / sigma)
+            zipped_mb = list(zip(m_values, b_values))
+            m,b = zipped_mb[input.regression_slider()]
+            curr_m.set(m)         
+            curr_b.set(b)
 
-                ax.plot(df.raw_x_values, m_raw * df.raw_x_values+ b_raw, color="red") #regression line
-                #ax.pause(0.5)
+            m_raw = m / sigma
+            b_raw = b - (m * mu / sigma)
+
+            ax.plot(df.raw_x_values, m_raw * df.raw_x_values+ b_raw, color="red") #regression line
+
 
         return fig
 
@@ -123,13 +129,18 @@ def server(input, output, session):
     def _() -> None:
         random_data()
         show_regression.set(False)
-        final_m.set(0)
-        final_b.set(0)
+        curr_m.set(0)
+        curr_b.set(0)
+        ui.update_slider("regression_slider", value=0)
 
 
     @render.code
+    def curr_equation_lr():
+       return f"Current equation: y = {round(curr_m.get(), 2)}x + {round(curr_b.get(), 2)}"
+    
+    @render.code
     def final_equation_lr():
-       return f"y = {round(final_m.get(), 2)}x + {round(final_b.get(), 2)}"
+       return f"Final equation: y = {round(final_m.get(), 2)}x + {round(final_b.get(), 2)}"
 
     
 app = App(app_ui, server)
