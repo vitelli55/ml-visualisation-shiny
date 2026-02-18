@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from models import gradient_descent
+from models import gradient_descent, kmeans_clustering
 
 from shiny import App, Inputs, Outputs, Session, render, ui, reactive
 
@@ -23,24 +23,25 @@ app_ui = ui.page_navbar(
         "Linear Regression",
         ui.layout_sidebar(
             ui.sidebar(
-                ui.output_data_frame("data_display"),
+                ui.output_data_frame("lr_data_display"),
                 ui.input_action_button("randomise_button", "Randomise Data"),
                 #ui.input_action_button("regression_button", "Draw regression line"),
                 ui.input_file("csvfile", "Upload your own CSV dataset", accept=[".csv"], multiple=False)
             ),
             
-            ui.card(
-                ui.card_header("Scatterplot"),
-                ui.output_plot("scatter_plot"),  
-                ui.input_slider("regression_slider", "Draw Regression Line", min=0, max=5, value=0, animate=True),  
-                
+            ui.layout_columns(
+                ui.card(
+                    ui.card_header("Scatterplot"),
+                    ui.output_plot("lr_scatter_plot"),  
+                    ui.input_slider("regression_slider", "Draw Regression Line", min=0, max=5, value=0, animate=True),  
+                    
+                ),
+                ui.card(
+                    ui.card_header("Equation of the line of best fit:"),
+                    ui.output_code("lr_curr_equation", placeholder=True),
+                    ui.output_code("lr_final_equation", placeholder=True),
+                ),
             ),
-            ui.card(
-                ui.card_header("Equation of the line of best fit:"),
-                ui.output_code("curr_equation_lr", placeholder=True),
-                ui.output_code("final_equation_lr", placeholder=True),
-            ),
-            
         ),
     ),
     ui.nav_panel(
@@ -55,6 +56,8 @@ app_ui = ui.page_navbar(
 
 #server
 def server(input, output, session):
+
+    #LINEAR REGRESSION
 
     show_regression = reactive.Value(False)
 
@@ -92,12 +95,12 @@ def server(input, output, session):
         return m_values, b_values
         
     @render.data_frame
-    def data_display():
+    def lr_data_display():
         df = data()
         return render.DataGrid(df, width='200px', height='300px')
 
     @render.plot(alt="Scatterplot")
-    def scatter_plot():
+    def lr_scatter_plot():
         df = data().copy()
         df['raw_x_values'] = df['x_values']
         fig, ax = plt.subplots()
@@ -135,12 +138,18 @@ def server(input, output, session):
 
 
     @render.code
-    def curr_equation_lr():
+    def lr_curr_equation():
        return f"Current equation: y = {round(curr_m.get(), 2)}x + {round(curr_b.get(), 2)}"
     
     @render.code
-    def final_equation_lr():
+    def lr_final_equation():
        return f"Final equation: y = {round(final_m.get(), 2)}x + {round(final_b.get(), 2)}"
+    
+
+    #KMEANS CLUSTERING
+
+
+
 
     
 app = App(app_ui, server)
