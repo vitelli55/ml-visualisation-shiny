@@ -2,3 +2,4 @@ shiny
 matplotlib
 pandas
 numpy
+scikit-learn
