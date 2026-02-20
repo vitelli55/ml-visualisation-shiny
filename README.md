@@ -1,7 +1,7 @@
 # Machine Learning Algorithms Visualization (Shiny for Python)
 Interactive Shiny app that demonstrates how machine learning algorithms work by visualizing them.
 
-Live app: 
+Live app: https://019c7b40-716d-cef8-3dcb-eae324145e63.share.connect.posit.cloud/
 
 ## About
 
