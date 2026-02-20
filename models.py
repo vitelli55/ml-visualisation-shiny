@@ -77,7 +77,7 @@ class KMeansClustering():
                 else:
                     cluster_centers.append(np.mean(X[indices], axis=0)[0])
 
-            if np.max(self.centroids - np.array(cluster_centers)) < 0.0001:
+            if np.max(self.centroids - np.array(cluster_centers)) < 1e-6:
                 break
             else:
                 self.centroids = np.array(cluster_centers)

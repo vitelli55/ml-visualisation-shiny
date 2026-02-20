@@ -20,7 +20,7 @@ app_ui = ui.page_navbar(
                 ui.output_data_frame("lr_data_display"),
                 ui.input_action_button("randomise_lr_button", "Randomise Data"),
                 #ui.input_action_button("regression_button", "Draw regression line"),
-                ui.input_file("csvfile", "Upload your own CSV dataset", accept=[".csv"], multiple=False)
+                #ui.input_file("csvfile", "Upload your own CSV dataset", accept=[".csv"], multiple=False)
             ),
             
             ui.layout_columns(
@@ -55,6 +55,7 @@ app_ui = ui.page_navbar(
                 ),
                 ui.card(
                     ui.card_header("Behind the scenes:"),
+                    ui.output_code("centroids_positions", placeholder=True),
                 )
             ),
         ),
@@ -151,6 +152,9 @@ def server(input, output, session):
     #KMEANS CLUSTERING
 
     show_clustering = reactive.Value(False)
+    centroid_reactive = reactive.Value(None)
+    #labels_reactive = reactive.Value(None)
+
 
     @reactive.effect
     @reactive.event(input.k_button)
@@ -188,6 +192,8 @@ def server(input, output, session):
 
             i = min(input.k_button(), len(kmeans.history)-1)
             centroids, labels = kmeans.history[i]
+            centroid_reactive.set(centroids)
+            #labels_reactive.set(labels)
 
             ax.scatter(df.x_values, df.y_values, c=labels)
             ax.scatter(centroids[:,0], centroids[:,1], marker="*", s=200) 
@@ -200,6 +206,11 @@ def server(input, output, session):
         kdata.set(kmeans_df())
         show_clustering.set(False)
         ui.update_slider("k_button", value=0)
+
+    @render.code
+    def centroids_positions():
+        centroids = centroid_reactive.get()
+        return f"1st centroids position:{centroids[0]} \n2nd centroid position:{centroids[1]} \n3rd centroid position:{centroids[2]}"
 
 
 
