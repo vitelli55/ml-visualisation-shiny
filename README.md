@@ -29,6 +29,12 @@ My goal with this project is to:
 * Build algorithms from first principles
 * Hopefully help others to visualise how these algorithms work.
 
+## What I Learned
+* Gained hands-on experience with Shiny for Python!
+* Improved my understanding of how machine learning models are made from scratch
+* Improved my proficiency in Python and its libraries (Matplotlib, Pandas, NumPy)
+* Learned git and publishing to GitHub.
+
 ## References
 
 This project was developed as a learning exercise.  
